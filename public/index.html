@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senhas Tenda</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  
+
+  <form id="chat">
+    <header>
+      <img src="brasao.jpg" alt="">
+      <div>
+        <h1>Prefeitura da Estância Balnearia de Mongagua</h1>
+        <h1>Instituto Alpha</h1>
+      </div>
+    </header>
+    <div class='controls'>
+      <button class="rec">
+        Recepção
+      </button>
+      <button class="panel">
+        Painel
+      </button>
+    </div>
+    <div class="messages"></div>
+    <input type="number" name="message" placeholder="Informe a senha a ser chamada!">
+    <button id="sendVoice" type="submit">Enviar</button>
+  </form>
+  
+  <script type="text/javascript">
+    var socket = io('http://localhost:3000');
+
+    $( document ).ready(function() {
+      $("input").css({
+        display: "none",
+      });
+      $("#sendVoice").css({
+        display: "none",
+      });
+    });
+
+    function renderMessage(message) {
+      $('.messages').append('<div class="message"><strong>Senha</strong> ' + message.message + ' </div>');
+    }
+
+    socket.on('previousMessages', function(messages) {
+      for (message of messages) {
+        renderMessage(message);
+      }
+    })
+
+    socket.on('receivedMessage', function(message) {
+      renderMessage(message);
+
+      var myWindowURL = "http://localhost:3000", myWindowName = "Senha";
+      var myWindowProperties  = "width=4000,height=4000,top=100,menubar=no,toolbar=no,titlebar=no,statusbar=no";
+      var openWindow;
+
+      openWindow = window.open(myWindowURL, myWindowName, myWindowProperties);
+
+      var n = message.message.toString();
+      const msg = new SpeechSynthesisUtterance(`Senha número ${n}`);
+      window.speechSynthesis.speak(msg);
+
+      setTimeout(function() { 
+          openWindow.close() 
+      }, 4000);
+    })
+
+    $('#chat').submit(function(event){
+      event.preventDefault();
+
+      var message = $('input[name=message]').val();
+
+      if (message.length) {
+        var messageObject = {
+          message:  message,
+        };
+
+        renderMessage(messageObject);
+
+        socket.emit('sendMessage', messageObject);
+      }
+     });
+     $('.rec').click(function(event){
+      event.preventDefault();
+
+      $(".messages").css({
+        display: "none",
+      });
+      $("input").css({
+        display: "block",
+      });
+      $("#sendVoice").css({
+        display: "block",
+      });
+     });
+     $('.panel').click(function(event){
+      event.preventDefault();
+
+
+      $(".messages").css({
+        display: "flex",
+      });
+      $("input").css({
+        display: "none",
+      });
+      $("#sendVoice").css({
+        display: "none",
+      });
+     });
+  </script>
+</body>
+</html>
